@@ -42,19 +42,39 @@ jobs:
           packages: 'platform-tools'
 
 
+    
       - name: Install Android NDK
         run: |
-          sdkmanager "platforms;android-36" \
-            "build-tools;36.0.0" \
-            "ndk;27.2.12479018"
+          sdkmanager "ndk;27.2.12479018"
+          rm -rf "$ANDROID_HOME/ndk/30.0.16248370"
           echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
+
 
       - name: Install libclang
         run: sudo apt-get update && sudo apt-get install -y libclang-dev
 
+        
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+        
+      - name: Configure Android Clang target
+        run: |
+          NDK="$ANDROID_HOME/ndk/27.2.12479018"
+          SYSROOT="$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+
+          echo "NDK_HOME=$NDK" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$NDK" >> $GITHUB_ENV
+
+          echo "BINDGEN_EXTRA_CLANG_ARGS=--target=aarch64-linux-android24 --sysroot=$SYSROOT" >> $GITHUB_ENV
+
+          echo "BINDGEN_EXTRA_CLANG_ARGS_AARCH64_LINUX_ANDROID=--target=aarch64-linux-android24 --sysroot=$SYSROOT" >> $GITHUB_ENV
+
+          echo "Using NDK: $NDK"
+          echo "Using sysroot: $SYSROOT"
+
 
       - name: Initialize Android
         run: pnpm tauri android init --ci
